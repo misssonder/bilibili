@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/misssonder/bilibili/pkg/errors"
+	"github.com/misssonder/bilibili/pkg/vedio"
 	"io/ioutil"
 	"net/http"
 )
@@ -164,6 +165,10 @@ type VideoInfoResp struct {
 }
 
 func (client *Client) GetVideoInfo(id string) (*VideoInfoResp, error) {
+	id, err := vedio.ExtractBvID(id)
+	if err != nil {
+		return nil, err
+	}
 	url := fmt.Sprintf("%s?bvid=%s", videoInfoUrl, id)
 	client.HttpClient = &http.Client{}
 	resp, err := client.HttpClient.Get(url)
