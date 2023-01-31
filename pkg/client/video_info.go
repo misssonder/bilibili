@@ -3,10 +3,11 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/misssonder/bilibili/pkg/errors"
-	"github.com/misssonder/bilibili/pkg/vedio"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/misssonder/bilibili/pkg/errors"
+	"github.com/misssonder/bilibili/pkg/vedio"
 )
 
 const (
