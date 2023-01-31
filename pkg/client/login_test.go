@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/misssonder/bilibili/internal/util"
-	"github.com/misssonder/bilibili/pkg/qrcode"
 	"os"
 	"testing"
+
+	"github.com/misssonder/bilibili/internal/util"
+	"github.com/misssonder/bilibili/pkg/qrcode"
 )
 
 func TestLogin(t *testing.T) {
