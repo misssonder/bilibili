@@ -21,10 +21,6 @@ func (client *Client) newCookieRequest(method, url string, body io.Reader) (*htt
 	return request, nil
 }
 
-func (client *Client) readCookieFromHeader(header http.Header) {
-	cookie := make([]string, 0, len(header.Values("Set-Cookie")))
-	for _, c := range header.Values("Set-Cookie") {
-		cookie = append(cookie, c)
-	}
+func (client *Client) SetCookie(cookie []string) {
 	client.cookie = cookie
 }

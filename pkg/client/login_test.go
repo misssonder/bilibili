@@ -3,33 +3,37 @@ package client
 import (
 	"os"
 	"testing"
-	
+
 	"github.com/misssonder/bilibili/internal/util"
 )
 
 func TestLogin(t *testing.T) {
 	client := &Client{}
-	statuses, err := client.LoginWithQrCode(os.Stdout)
+	resps, err := client.LoginWithQrCode(os.Stdout)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	for status := range statuses {
-		println(status)
+	for resp := range resps {
+		if resp.LoginStatus == LoginSuccess {
+			println(util.MustMarshal(resp.Cookie))
+		}
 	}
 
 }
 
 func TestClient_NavInfo(t *testing.T) {
 	client := &Client{}
-	statuses, err := client.LoginWithQrCode(os.Stdout)
+	resps, err := client.LoginWithQrCode(os.Stdout)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	for range statuses {
+	for resp := range resps {
+		if resp.LoginStatus == LoginSuccess {
+			client.SetCookie(resp.Cookie)
+		}
 	}
-
 	info, err := client.NavInfo()
 	if err != nil {
 		t.Error(err)

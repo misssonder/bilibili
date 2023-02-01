@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	bilibili "github.com/misssonder/bilibili/pkg/client"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -41,10 +40,12 @@ var infoCmd = &cobra.Command{
 	Short: "",
 	Args:  cobra.ExactArgs(1),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return checkOutputFormat()
+		if err := checkOutputFormat(); err != nil {
+			return err
+		}
+		return login()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client := &bilibili.Client{}
 		info, err := client.GetVideoInfo(args[0])
 		exitOnError(err)
 		videoInfo := &VideoInfo{

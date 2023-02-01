@@ -9,11 +9,14 @@ import (
 
 func TestClient_MySpaceInfo(t *testing.T) {
 	client := &Client{}
-	statuses, err := client.LoginWithQrCode(os.Stdout)
+	resps, err := client.LoginWithQrCode(os.Stdout)
 	if err != nil {
 		return
 	}
-	for range statuses {
+	for resp := range resps {
+		if resp.LoginStatus == LoginSuccess {
+			client.SetCookie(resp.Cookie)
+		}
 		continue
 	}
 	info, err := client.MySpaceInfo()

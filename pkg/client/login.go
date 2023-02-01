@@ -177,37 +177,34 @@ func (client *Client) GenerateQrcode() (*GenerateQrCodeResp, error) {
 }
 
 // PollQrcode https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/login/login_action/QR.md
-func (client *Client) PollQrcode(qrcode string) (*PollQrCodeResp, error) {
+func (client *Client) PollQrcode(qrcode string) (*PollQrCodeResp, http.Header, error) {
 	client.HttpClient = &http.Client{}
 
 	url := fmt.Sprintf("%s?qrcode_key=%s", pollQrCodeUrl, qrcode)
 	resp, err := client.HttpClient.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.ErrUnexpectedStatusCode(resp.StatusCode)
+		return nil, nil, errors.ErrUnexpectedStatusCode(resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pollQrCodeResp := &PollQrCodeResp{}
 	if err = json.Unmarshal(body, pollQrCodeResp); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if pollQrCodeResp.Code != 0 {
-		return nil, errors.StatusError{Code: pollQrCodeResp.Code, Cause: pollQrCodeResp.Message}
+		return nil, nil, errors.StatusError{Code: pollQrCodeResp.Code, Cause: pollQrCodeResp.Message}
 	}
-	if pollQrCodeResp.Data.Code == 0 {
-		client.readCookieFromHeader(resp.Header)
-	}
-	return pollQrCodeResp, nil
+	return pollQrCodeResp, resp.Header, nil
 }
 
 func (client *Client) NavInfo() (*NavInfoResp, error) {
@@ -246,6 +243,10 @@ func (client *Client) NavInfo() (*NavInfoResp, error) {
 
 // LoginStatus https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/login/login_action/QR.md#%E6%89%AB%E7%A0%81%E7%99%BB%E5%BD%95web%E7%AB%AF
 type LoginStatus int
+type LoginResp struct {
+	LoginStatus LoginStatus
+	Cookie      []string
+}
 
 var (
 	LoginSuccess           = LoginStatus(0)
@@ -255,7 +256,7 @@ var (
 )
 
 // LoginWithQrCode writer is where the qrcode be written
-func (client *Client) LoginWithQrCode(writer io.Writer) (<-chan LoginStatus, error) {
+func (client *Client) LoginWithQrCode(writer io.Writer) (<-chan LoginResp, error) {
 	generateQrCodeResp, err := client.GenerateQrcode()
 	if err != nil {
 		return nil, err
@@ -265,17 +266,26 @@ func (client *Client) LoginWithQrCode(writer io.Writer) (<-chan LoginStatus, err
 		return nil, err
 	}
 
-	var loginStatus = make(chan LoginStatus)
+	var loginResp = make(chan LoginResp)
 	go func() {
-		defer close(loginStatus)
-		var pollQrCodeResp *PollQrCodeResp
+		defer close(loginResp)
+		var (
+			pollQrCodeResp *PollQrCodeResp
+			respHeader     http.Header
+		)
 		for {
-			pollQrCodeResp, err = client.PollQrcode(generateQrCodeResp.Data.QrcodeKey)
+			pollQrCodeResp, respHeader, err = client.PollQrcode(generateQrCodeResp.Data.QrcodeKey)
 			if err != nil {
-				loginStatus <- -1
+				loginResp <- LoginResp{
+					LoginStatus: LoginStatus(-1),
+					Cookie:      nil,
+				}
 				return
 			}
-			loginStatus <- LoginStatus(pollQrCodeResp.Data.Code)
+			loginResp <- LoginResp{
+				LoginStatus: LoginStatus(pollQrCodeResp.Data.Code),
+				Cookie:      respHeader.Values("Set-Cookie"),
+			}
 			switch pollQrCodeResp.Data.Code {
 			case int(LoginSuccess), int(LoginExpired):
 				return
@@ -284,5 +294,5 @@ func (client *Client) LoginWithQrCode(writer io.Writer) (<-chan LoginStatus, err
 			}
 		}
 	}()
-	return loginStatus, nil
+	return loginResp, nil
 }
