@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/misssonder/bilibili/pkg/errors"
+	"github.com/misssonder/bilibili/pkg/qrcode"
 )
 
 const (
@@ -94,5 +96,50 @@ func (client *Client) PollQrcode(qrcode string) (*PollQrCodeResp, error) {
 	if pollQrCodeResp.Code != 0 {
 		return nil, errors.StatusError{Code: pollQrCodeResp.Code, Cause: pollQrCodeResp.Message}
 	}
+	if pollQrCodeResp.Data.Code == 0 {
+		client.readCookieFromHeader(resp.Header)
+	}
 	return pollQrCodeResp, nil
+}
+
+// LoginStatus https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/login/login_action/QR.md#%E6%89%AB%E7%A0%81%E7%99%BB%E5%BD%95web%E7%AB%AF
+type LoginStatus int
+
+var (
+	LoginSuccess           = LoginStatus(0)
+	LoginNotScan           = LoginStatus(86101)
+	LoginScanButNotConfirm = LoginStatus(86090)
+	LoginExpired           = LoginStatus(86038)
+)
+
+func (client *Client) LoginWithQrCode() (<-chan LoginStatus, error) {
+	generateQrCodeResp, err := client.GenerateQrcode()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = qrcode.Generate(generateQrCodeResp.Data.URL, qrcode.Low, os.Stdout); err != nil {
+		return nil, err
+	}
+
+	var loginStatus = make(chan LoginStatus)
+	go func() {
+		defer close(loginStatus)
+		var pollQrCodeResp *PollQrCodeResp
+		for {
+			pollQrCodeResp, err = client.PollQrcode(generateQrCodeResp.Data.QrcodeKey)
+			if err != nil {
+				loginStatus <- -1
+				return
+			}
+			loginStatus <- LoginStatus(pollQrCodeResp.Data.Code)
+			switch pollQrCodeResp.Data.Code {
+			case int(LoginSuccess), int(LoginExpired):
+				return
+			default:
+				continue
+			}
+		}
+	}()
+	return loginStatus, nil
 }

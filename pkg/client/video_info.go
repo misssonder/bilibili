@@ -172,7 +172,11 @@ func (client *Client) GetVideoInfo(id string) (*VideoInfoResp, error) {
 	}
 	url := fmt.Sprintf("%s?bvid=%s", videoInfoUrl, id)
 	client.HttpClient = &http.Client{}
-	resp, err := client.HttpClient.Get(url)
+	request, err := client.newCookieRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.HttpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
