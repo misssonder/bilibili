@@ -144,8 +144,6 @@ func (client *Client) MySpaceInfo() (*MySpaceInfoResp, error) {
 		return nil, err
 	}
 
-	stringBody := string(body)
-	println(stringBody)
 	mySpaceInfoResp := &MySpaceInfoResp{}
 	if err = json.Unmarshal(body, mySpaceInfoResp); err != nil {
 		return nil, err
