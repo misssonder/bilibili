@@ -3,12 +3,11 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-
 	"github.com/misssonder/bilibili/pkg/errors"
 	"github.com/misssonder/bilibili/pkg/qrcode"
+	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 const (
@@ -112,13 +111,14 @@ var (
 	LoginExpired           = LoginStatus(86038)
 )
 
-func (client *Client) LoginWithQrCode() (<-chan LoginStatus, error) {
+// LoginWithQrCode writer is where the qrcode be written
+func (client *Client) LoginWithQrCode(writer io.Writer) (<-chan LoginStatus, error) {
 	generateQrCodeResp, err := client.GenerateQrcode()
 	if err != nil {
 		return nil, err
 	}
 
-	if err = qrcode.Generate(generateQrCodeResp.Data.URL, qrcode.Low, os.Stdout); err != nil {
+	if err = qrcode.Generate(generateQrCodeResp.Data.URL, qrcode.Low, writer); err != nil {
 		return nil, err
 	}
 

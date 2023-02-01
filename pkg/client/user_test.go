@@ -1,6 +1,7 @@
 package client
 
 import (
+	"os"
 	"testing"
 
 	"github.com/misssonder/bilibili/internal/util"
@@ -8,7 +9,7 @@ import (
 
 func TestClient_MySpaceInfo(t *testing.T) {
 	client := &Client{}
-	statuses, err := client.LoginWithQrCode()
+	statuses, err := client.LoginWithQrCode(os.Stdout)
 	if err != nil {
 		return
 	}
