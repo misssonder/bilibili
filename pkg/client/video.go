@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/misssonder/bilibili/pkg/errors"
-	"github.com/misssonder/bilibili/pkg/vedio"
+	"github.com/misssonder/bilibili/pkg/video"
 )
 
 const (
@@ -192,6 +192,51 @@ type PlayUrlResp struct {
 			URL       string   `json:"url"`
 			BackupURL []string `json:"backup_url"`
 		} `json:"durl"`
+		Dash struct {
+			Duration      int     `json:"duration"`
+			MinBufferTime float64 `json:"min_buffer_time"`
+			Video         []struct {
+				ID           int      `json:"id"`
+				BaseURL      string   `json:"base_url"`
+				BackupURL    []string `json:"backup_url"`
+				Bandwidth    int      `json:"bandwidth"`
+				MimeType     string   `json:"mime_type"`
+				Codecs       string   `json:"codecs"`
+				Width        int      `json:"width"`
+				Height       int      `json:"height"`
+				FrameRate    string   `json:"frame_rate"`
+				Sar          string   `json:"sar"`
+				StartWithSap int      `json:"start_with_sap"`
+				SegmentBase  struct {
+					Initialization string `json:"initialization"`
+					IndexRange     string `json:"index_range"`
+				} `json:"segment_base"`
+				Codecid int `json:"codecid"`
+			} `json:"video"`
+			Audio []struct {
+				ID           int      `json:"id"`
+				BaseURL      string   `json:"base_url"`
+				BackupURL    []string `json:"backup_url"`
+				Bandwidth    int      `json:"bandwidth"`
+				MimeType     string   `json:"mime_type"`
+				Codecs       string   `json:"codecs"`
+				Width        int      `json:"width"`
+				Height       int      `json:"height"`
+				FrameRate    string   `json:"frame_rate"`
+				Sar          string   `json:"sar"`
+				StartWithSap int      `json:"start_with_sap"`
+				SegmentBase  struct {
+					Initialization string `json:"initialization"`
+					IndexRange     string `json:"index_range"`
+				} `json:"segment_base"`
+				Codecid int `json:"codecid"`
+			} `json:"audio"`
+			Dolby struct {
+				Type  int         `json:"type"`
+				Audio interface{} `json:"audio"`
+			} `json:"dolby"`
+			Flac interface{} `json:"flac"`
+		} `json:"dash"`
 		SupportFormats []struct {
 			Quality        int         `json:"quality"`
 			Format         string      `json:"format"`
@@ -207,7 +252,7 @@ type PlayUrlResp struct {
 }
 
 func (client *Client) GetVideoInfo(id string) (*VideoInfoResp, error) {
-	id, err := vedio.ExtractBvID(id)
+	id, err := video.ExtractBvID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -241,12 +286,23 @@ func (client *Client) GetVideoInfo(id string) (*VideoInfoResp, error) {
 
 	return videoInfoResp, nil
 }
-func (client *Client) PlayUrl(bvid, cid string, qn int) (*PlayUrlResp, error) {
-	id, err := vedio.ExtractBvID(bvid)
+
+// Fnval https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/video/videostream_url.md#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
+type Fnval int64
+
+const (
+	MP4  Fnval = 1
+	Dash Fnval = 16
+	HDR  Fnval = 64
+	_4K  Fnval = 128
+)
+
+func (client *Client) PlayUrl(bvid, cid string, qn int, fnval Fnval) (*PlayUrlResp, error) {
+	id, err := video.ExtractBvID(bvid)
 	if err != nil {
 		return nil, err
 	}
-	url := fmt.Sprintf("%s?bvid=%s&cid=%s&qn=%d&fourk=1", playUrl, id, cid, qn)
+	url := fmt.Sprintf("%s?bvid=%s&cid=%s&qn=%d&fourk=1&fnval=%d", playUrl, id, cid, qn, fnval)
 	client.HttpClient = &http.Client{}
 	request, err := client.newCookieRequest(http.MethodGet, url, nil)
 	if err != nil {

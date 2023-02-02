@@ -1,4 +1,4 @@
-package vedio
+package video
 
 import (
 	"testing"
@@ -18,7 +18,7 @@ func TestConvert(t *testing.T) {
 }
 
 func TestExtractBvID(t *testing.T) {
-	bvID, err := ExtractBvID("https://www.bilibili.com/video/BV1kd4y1W7RG/?spm_id_from=333.999.0.0")
+	bvID, err := ExtractBvID("https://www.bilibili.com/video/BV1sy4y197KP/?spm_id_from=333.337.search-card.all.click&vd_source=76326787bdfce30577382b0e7e18f35c")
 	if err != nil {
 		t.Error(err)
 		return

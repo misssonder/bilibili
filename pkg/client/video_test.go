@@ -2,6 +2,7 @@ package client
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/misssonder/bilibili/internal/util"
@@ -36,7 +37,13 @@ func TestClient_PlayUrl(t *testing.T) {
 			continue
 		}
 	}
-	resp, err := client.PlayUrl("https://www.bilibili.com/video/BV1XG4y1X7HV/?spm_id_from=333.1007.tianma.1-3-3.click&vd_source=76326787bdfce30577382b0e7e18f35c", "973082699", 120)
+	id := "https://www.bilibili.com/video/BV1sy4y197KP/?spm_id_from=333.337.search-card.all.click&vd_source=76326787bdfce30577382b0e7e18f35c"
+	info, err := client.GetVideoInfo(id)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	resp, err := client.PlayUrl(id, strconv.Itoa(info.Data.Pages[0].Cid), 120, HDR|Dash)
 	if err != nil {
 		t.Error(err)
 		return
