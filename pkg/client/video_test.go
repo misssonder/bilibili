@@ -42,7 +42,7 @@ func TestClient_PlayUrl(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	resp, err := client.PlayUrl(id, int64(info.Data.Pages[0].Cid), 120, HDR|Dash)
+	resp, err := client.PlayUrl(id, int64(info.Data.Pages[0].Cid), Qn4k, FnvalHDR|Fnval4K)
 	if err != nil {
 		t.Error(err)
 		return
