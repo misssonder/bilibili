@@ -8,12 +8,26 @@ import (
 	"strings"
 
 	bilibili "github.com/misssonder/bilibili/pkg/client"
+	"github.com/spf13/cobra"
 )
 
 var (
 	cookieDir  = "."
 	cookieFile = "cookie.txt"
 )
+
+var loginCmd = &cobra.Command{
+	Use:   "login",
+	Short: "",
+	Args:  cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		exitOnError(login())
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(loginCmd)
+}
 
 func isLogin() bool {
 	cookie, err := readCookieFromFile()

@@ -297,12 +297,12 @@ const (
 	_4K  Fnval = 128
 )
 
-func (client *Client) PlayUrl(bvid, cid string, qn int, fnval Fnval) (*PlayUrlResp, error) {
+func (client *Client) PlayUrl(bvid string, cid int64, qn int, fnval Fnval) (*PlayUrlResp, error) {
 	id, err := video.ExtractBvID(bvid)
 	if err != nil {
 		return nil, err
 	}
-	url := fmt.Sprintf("%s?bvid=%s&cid=%s&qn=%d&fourk=1&fnval=%d", playUrl, id, cid, qn, fnval)
+	url := fmt.Sprintf("%s?bvid=%s&cid=%d&qn=%d&fourk=1&fnval=%d", playUrl, id, cid, qn, fnval)
 	client.HttpClient = &http.Client{}
 	request, err := client.newCookieRequest(http.MethodGet, url, nil)
 	if err != nil {

@@ -2,7 +2,6 @@ package client
 
 import (
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/misssonder/bilibili/internal/util"
@@ -43,7 +42,7 @@ func TestClient_PlayUrl(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	resp, err := client.PlayUrl(id, strconv.Itoa(info.Data.Pages[0].Cid), 120, HDR|Dash)
+	resp, err := client.PlayUrl(id, int64(info.Data.Pages[0].Cid), 120, HDR|Dash)
 	if err != nil {
 		t.Error(err)
 		return
