@@ -7,6 +7,27 @@ go install github.com/misssonder/bilibili/cmd/bilibilidl
 ```
 
 ## Example
+```shell
+$ bilibilidl -h 
+
+Bilibili Downloader
+
+Usage:
+  bilibilidl [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  download    Download bilibili video through url/BVID/AVID.
+  help        Help about any command
+  info        Show base info of video.
+  login       Login bilibili through qrcode (default is $HOME/.bilibili_cookie.txt).
+
+Flags:
+  -h, --help      help for bilibilidl
+  -v, --verbose   Enable verbose output
+
+Use "bilibilidl [command] --help" for more information about a command.
+```
 ### 视频基本信息
 ```shell
 $ bilibilidl info 'https://www.bilibili.com/video/BV16X4y1g7wT/?spm_id_from=333.934.0.0'
