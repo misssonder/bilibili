@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	bilibili "github.com/misssonder/bilibili/pkg/client"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -44,10 +45,7 @@ func isLogin() bool {
 
 func login() error {
 	if !isLogin() {
-		_, err := os.Stdout.Write([]byte("Please Login\n"))
-		if err != nil {
-			return err
-		}
+		logrus.Info("Please login")
 		responses, err := client.LoginWithQrCode(os.Stdout)
 		if err != nil {
 			return err

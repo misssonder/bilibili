@@ -261,7 +261,7 @@ func downloadMedia(title, url string, writer io.Writer) error {
 		mpb.PrependDecorators(
 			decor.Name(fmt.Sprintf("%s:", title)),
 			decor.OnComplete(
-				decor.AverageETA(decor.ET_STYLE_GO, decor.WC{W: 4}), "done ",
+				decor.Name("download... "), "done ",
 			),
 			decor.CountersKibiByte("% .2f / % .2f"),
 			decor.Percentage(decor.WCSyncSpace),
