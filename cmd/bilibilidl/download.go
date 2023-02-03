@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	outputFile string
-	outputDir  string
+	outputFile       string
+	outputDir        string
+	multipleDownload bool
 )
 
 var downloadCmd = &cobra.Command{
@@ -34,6 +35,9 @@ var downloadCmd = &cobra.Command{
 		}
 		if err := checkOutputFormat(); err != nil {
 			return err
+		}
+		if multipleDownload && len(outputFile) != 0 {
+			return fmt.Errorf("multiple download not support set output filename")
 		}
 		return login()
 	},
@@ -50,6 +54,7 @@ func init() {
 	rootCmd.AddCommand(downloadCmd)
 	downloadCmd.Flags().StringVarP(&outputFile, "filename", "o", "", "The output file.")
 	downloadCmd.Flags().StringVarP(&outputDir, "directory", "d", ".", "The output directory.")
+	downloadCmd.Flags().BoolVarP(&multipleDownload, "multiple", "m", false, "Download multiple videos.")
 }
 
 func selectPagesCid(info *bilibili.VideoInfoResp) (int64, error) {
@@ -63,6 +68,23 @@ func selectPagesCid(info *bilibili.VideoInfoResp) (int64, error) {
 		return 0, err
 	}
 	return int64(pages[selectedPage].Cid), nil
+}
+
+func multipleSelectPages(info *bilibili.VideoInfoResp) ([]int64, error) {
+	pages := info.Data.Pages
+	rows := make([]string, 0, len(pages))
+	for _, page := range pages {
+		rows = append(rows, page.Part)
+	}
+	selectedPages, err := multipleSelectList("Please select page", rows)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]int64, 0, len(pages))
+	for _, selectedPage := range selectedPages {
+		output = append(output, int64(pages[selectedPage].Cid))
+	}
+	return output, nil
 }
 
 func selectFormat() (bilibili.Fnval, error) {
@@ -112,89 +134,118 @@ func download(bvid string) error {
 		return err
 	}
 
-	cid, err := selectPagesCid(info)
-	if err != nil {
-		return err
-	}
+	var cids []int64
 
-	format, err := selectFormat()
-	if err != nil {
-		return err
-	}
-
-	if len(outputFile) == 0 {
-		outputFile = fmt.Sprintf("%s.mp4", info.Data.Title)
-	}
-
-	switch format {
-	case bilibili.FnvalMP4:
-		playUrlResp, err := client.PlayUrl(bvid, cid, bilibili.Qn1080P, format)
+	switch multipleDownload {
+	case true:
+		cids, err = multipleSelectPages(info)
 		if err != nil {
 			return err
 		}
 
-		writer, err := getDownloadDestFile(outputDir, outputFile)
+	default:
+		var cid int64
+		cid, err = selectPagesCid(info)
 		if err != nil {
 			return err
 		}
-		defer writer.Close()
+		cids = append(cids, cid)
 
-		return downloadMedia("Video", playUrlResp.Data.Durl[0].URL, writer)
-	case bilibili.FnvalDash:
-		if err = checkFFmpeg(); err != nil {
-			return err
-		}
-		playUrlResp, err := client.PlayUrl(bvid, cid, 0, format)
+	}
+
+	for _, cid := range cids {
+		format, err := selectFormat()
 		if err != nil {
 			return err
 		}
-		var (
-			selectedVideoQuality bilibili.Qn
-			selectedAudioQuality bilibili.Qn
-			videoTmp             *os.File
-			audioTmp             *os.File
-		)
-		{
-			videoQualities := make([]bilibili.Qn, 0, len(playUrlResp.Data.Dash.Video))
-			videoTmp, err = os.CreateTemp(outputDir, "bilibili_video_*.m4s")
+		if len(outputFile) == 0 {
+			outputFile = fmt.Sprintf("%s_%d.mp4", info.Data.Title, cid)
+		} else {
+			outputFile = fmt.Sprintf("%s_%d.mp4", outputFile, cid)
+		}
+
+		switch format {
+		case bilibili.FnvalMP4:
+			playUrlResp, err := client.PlayUrl(bvid, cid, bilibili.Qn1080P, format)
 			if err != nil {
 				return err
 			}
-			defer os.Remove(videoTmp.Name())
-			for _, video := range playUrlResp.Data.Dash.Video {
-				videoQualities = append(videoQualities, bilibili.Qn(video.ID))
-			}
-			selectedVideoQuality, err = selectMediaQuality("Please select video quality", videoQualities)
+
+			writer, err := getDownloadDestFile(outputDir, outputFile)
 			if err != nil {
 				return err
 			}
-		}
-		{
-			audioQualities := make([]bilibili.Qn, 0, len(playUrlResp.Data.Dash.Audio))
-			audioTmp, err = os.CreateTemp(outputDir, "bilibili_audio_*.m4s")
+
+			if err = downloadMedia("Video", playUrlResp.Data.Durl[0].URL, writer); err != nil {
+				writer.Close()
+				return err
+			}
+			writer.Close()
+			continue
+		case bilibili.FnvalDash:
+			if err = checkFFmpeg(); err != nil {
+				return err
+			}
+			playUrlResp, err := client.PlayUrl(bvid, cid, 0, format)
 			if err != nil {
 				return err
 			}
-			defer os.Remove(audioTmp.Name())
-			for _, audio := range playUrlResp.Data.Dash.Audio {
-				audioQualities = append(audioQualities, bilibili.Qn(audio.ID))
+			var (
+				selectedVideoQuality bilibili.Qn
+				selectedAudioQuality bilibili.Qn
+				videoTmp             *os.File
+				audioTmp             *os.File
+			)
+			{
+				videoQualities := make([]bilibili.Qn, 0, len(playUrlResp.Data.Dash.Video))
+				videoTmp, err = os.CreateTemp(outputDir, "bilibili_video_*.m4s")
+				if err != nil {
+					return err
+				}
+
+				for _, video := range playUrlResp.Data.Dash.Video {
+					videoQualities = append(videoQualities, bilibili.Qn(video.ID))
+				}
+				selectedVideoQuality, err = selectMediaQuality("Please select video quality", videoQualities)
+				if err != nil {
+					os.Remove(videoTmp.Name())
+					return err
+				}
+				os.Remove(videoTmp.Name())
 			}
-			selectedAudioQuality, err = selectMediaQuality("Please select audio quality", audioQualities)
-			if err != nil {
+			{
+				audioQualities := make([]bilibili.Qn, 0, len(playUrlResp.Data.Dash.Audio))
+				audioTmp, err = os.CreateTemp(outputDir, "bilibili_audio_*.m4s")
+				if err != nil {
+					return err
+				}
+				for _, audio := range playUrlResp.Data.Dash.Audio {
+					audioQualities = append(audioQualities, bilibili.Qn(audio.ID))
+				}
+				selectedAudioQuality, err = selectMediaQuality("Please select audio quality", audioQualities)
+				if err != nil {
+					os.Remove(audioTmp.Name())
+					return err
+				}
+				os.Remove(audioTmp.Name())
+
+			}
+			if err = downloadMedia("Video", chooseMediaUrl(playUrlResp, selectedVideoQuality), videoTmp); err != nil {
 				return err
 			}
+			if err = downloadMedia("Audio", chooseMediaUrl(playUrlResp, selectedAudioQuality), audioTmp); err != nil {
+				return err
+			}
+			ins.Start()
+			if err = merge(videoTmp.Name(), audioTmp.Name(), path.Join(outputDir, outputFile)); err != nil {
+				return err
+			}
+			ins.Stop()
+			continue
 		}
-		if err = downloadMedia("Video", chooseMediaUrl(playUrlResp, selectedVideoQuality), videoTmp); err != nil {
-			return err
-		}
-		if err = downloadMedia("Audio", chooseMediaUrl(playUrlResp, selectedAudioQuality), audioTmp); err != nil {
-			return err
-		}
-		ins.Start()
-		defer ins.Stop()
-		return merge(videoTmp.Name(), audioTmp.Name())
 	}
 	return nil
+
 }
 
 func chooseMediaUrl(playUrlResp *bilibili.PlayUrlResp, qn bilibili.Qn) string {
@@ -216,13 +267,13 @@ func chooseMediaUrl(playUrlResp *bilibili.PlayUrlResp, qn bilibili.Qn) string {
 
 }
 
-func merge(video, audio string) error {
+func merge(video, audio, output string) error {
 	cmd := exec.Command("ffmpeg", "-y",
 		"-i", video,
 		"-i", audio,
 		"-c", "copy", // Just copy without re-encoding
 		"-shortest", // Finish encoding when the shortest input stream ends
-		path.Join(outputDir, outputFile),
+		output,
 		"-loglevel", "warning",
 	)
 	cmd.Stderr = os.Stderr
