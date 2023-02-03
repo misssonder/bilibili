@@ -9,7 +9,7 @@ go install github.com/misssonder/bilibili/cmd/bilibilidl
 # Example
 ## 视频基本信息
 ```shell
-bilibilidl info 'https://www.bilibili.com/video/BV16X4y1g7wT/?spm_id_from=333.934.0.0'
+$ bilibilidl info 'https://www.bilibili.com/video/BV16X4y1g7wT/?spm_id_from=333.934.0.0'
 
 Title:       【才浅】15天花20万元用500克黄金敲数万锤纯手工打造三星堆黄金面具
 Author:      才疏学浅的才浅(2200736)
