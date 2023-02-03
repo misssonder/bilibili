@@ -1,13 +1,13 @@
 # Bilibili Download
 本项目是使用golang编写的bilibili视频下载器
 
-# 安装
+## 安装
 ```shell
 go install github.com/misssonder/bilibili/cmd/bilibilidl
 ```
 
-# Example
-## 视频基本信息
+## Example
+### 视频基本信息
 ```shell
 $ bilibilidl info 'https://www.bilibili.com/video/BV16X4y1g7wT/?spm_id_from=333.934.0.0'
 
@@ -26,4 +26,8 @@ bgm:
 | 三星堆面具字幕修改版3    |    1 | 323723441 |      717 | 1080*1920 |
 +-----------------------+------+-----------+----------+-----------+
 ```
-## 下载视频
+### 下载视频
+![](images/example_download.gif)
+## Inspired
+- [https://github.com/SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
+- [https://github.com/kkdai/youtube](https://github.com/kkdai/youtube)
