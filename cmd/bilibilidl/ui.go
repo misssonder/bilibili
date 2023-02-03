@@ -4,39 +4,42 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
-	"github.com/manifoldco/promptui"
-	"github.com/sirupsen/logrus"
 )
 
 var ins = spinner.New(spinner.CharSets[35], 100*time.Millisecond)
 
 func selectList(title string, items []string) (int, error) {
-	prompt := promptui.Select{
-		Label:        title,
-		Items:        items,
-		Size:         15,
-		CursorPos:    0,
-		IsVimMode:    false,
-		HideHelp:     false,
-		HideSelected: false,
-		Templates:    nil,
-		Keys:         nil,
-		Searcher: func(input string, index int) bool {
-			return inText(strings.ToLower(input), strings.ToLower(items[index]))
+	question := &survey.Select{
+		Message: title,
+		Options: items,
+		Filter: func(filter string, value string, index int) bool {
+			return inText(strings.ToLower(filter), strings.ToLower(value))
 		},
-		StartInSearchMode: true,
-		Pointer:           nil,
-		Stdin:             nil,
-		Stdout:            nil,
 	}
-	idx, result, err := prompt.Run()
+	var idx int
+	err := survey.AskOne(question, &idx)
 	if err != nil {
 		return 0, err
 	}
-	logrus.Infof("select %d, %s", idx, result)
-
 	return idx, nil
+}
+
+func multipleSelectList(title string, items []string) ([]int, error) {
+	question := &survey.MultiSelect{
+		Message: title,
+		Options: items,
+		Filter: func(filter string, value string, index int) bool {
+			return inText(strings.ToLower(filter), strings.ToLower(value))
+		},
+	}
+	var idxs = make([]int, 0, len(items))
+	err := survey.AskOne(question, &idxs)
+	if err != nil {
+		return nil, err
+	}
+	return idxs, nil
 }
 
 // inText a in `aaa
