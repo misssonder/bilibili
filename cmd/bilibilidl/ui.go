@@ -2,10 +2,14 @@ package main
 
 import (
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/manifoldco/promptui"
 	"github.com/sirupsen/logrus"
 )
+
+var ins = spinner.New(spinner.CharSets[35], 100*time.Millisecond)
 
 func selectList(title string, items []string) (int, error) {
 	prompt := promptui.Select{

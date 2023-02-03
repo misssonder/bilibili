@@ -139,7 +139,7 @@ func download(bvid string) error {
 		}
 		defer writer.Close()
 
-		return downloadMedia(playUrlResp.Data.Durl[0].URL, writer)
+		return downloadMedia("Video", playUrlResp.Data.Durl[0].URL, writer)
 	case bilibili.FnvalDash:
 		if err = checkFFmpeg(); err != nil {
 			return err
@@ -184,16 +184,14 @@ func download(bvid string) error {
 				return err
 			}
 		}
-		logrus.Info("Download video...")
-		if err = downloadMedia(chooseMediaUrl(playUrlResp, selectedVideoQuality), videoTmp); err != nil {
+		if err = downloadMedia("Video", chooseMediaUrl(playUrlResp, selectedVideoQuality), videoTmp); err != nil {
 			return err
 		}
-		logrus.Info("Download video successfully!")
-		logrus.Info("Download audio...")
-		if err = downloadMedia(chooseMediaUrl(playUrlResp, selectedAudioQuality), audioTmp); err != nil {
+		if err = downloadMedia("Audio", chooseMediaUrl(playUrlResp, selectedAudioQuality), audioTmp); err != nil {
 			return err
 		}
-		logrus.Info("Download audio successfully!")
+		ins.Start()
+		defer ins.Stop()
 		return merge(videoTmp.Name(), audioTmp.Name())
 	}
 	return nil
@@ -241,7 +239,7 @@ func getDownloadDestFile(dir, f string) (*os.File, error) {
 	return file, nil
 }
 
-func downloadMedia(url string, writer io.Writer) error {
+func downloadMedia(title, url string, writer io.Writer) error {
 	cli := &http.Client{}
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -261,6 +259,10 @@ func downloadMedia(url string, writer io.Writer) error {
 		resp.ContentLength,
 
 		mpb.PrependDecorators(
+			decor.Name(fmt.Sprintf("%s:", title)),
+			decor.OnComplete(
+				decor.AverageETA(decor.ET_STYLE_GO, decor.WC{W: 4}), "done ",
+			),
 			decor.CountersKibiByte("% .2f / % .2f"),
 			decor.Percentage(decor.WCSyncSpace),
 		),
