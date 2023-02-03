@@ -26,7 +26,7 @@ var (
 
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "",
+	Short: "Download bilibili video through url/BVID/AVID.",
 	Args:  cobra.ExactArgs(1),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := checkDir(); err != nil {

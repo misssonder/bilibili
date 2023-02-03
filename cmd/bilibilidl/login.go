@@ -13,14 +13,17 @@ import (
 )
 
 var (
-	cookieDir  = "."
-	cookieFile = "cookie.txt"
+	cookieDir  = os.Getenv("HOME")
+	cookieFile = ".bilibili_cookie.txt"
 )
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "",
+	Short: "Login bilibili through qrcode (default is $HOME/.bilibili_cookie.txt).",
 	Args:  cobra.ExactArgs(0),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		exitOnError(createLoginDir())
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		exitOnError(login())
 	},
@@ -89,4 +92,20 @@ func readCookieFromFile() ([]string, error) {
 		return nil, err
 	}
 	return strings.Split(string(data), "\n"), nil
+}
+
+func createLoginDir() error {
+	_, err := os.Stat(cookieDir)
+	switch err {
+	case nil:
+	default:
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(cookieDir, 0o755); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
 }

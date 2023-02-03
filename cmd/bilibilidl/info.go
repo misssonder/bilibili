@@ -37,7 +37,7 @@ type VideoInfo struct {
 
 var infoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "",
+	Short: "Show base info of video.",
 	Args:  cobra.ExactArgs(1),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := checkOutputFormat(); err != nil {
