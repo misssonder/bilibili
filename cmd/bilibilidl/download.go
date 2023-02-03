@@ -12,6 +12,7 @@ import (
 	bilibili "github.com/misssonder/bilibili/pkg/client"
 	"github.com/misssonder/bilibili/pkg/errors"
 	"github.com/misssonder/bilibili/pkg/video"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb/v5"
 	"github.com/vbauerster/mpb/v5/decor"
@@ -28,6 +29,9 @@ var downloadCmd = &cobra.Command{
 	Short: "",
 	Args:  cobra.ExactArgs(1),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := checkDir(); err != nil {
+			return err
+		}
 		if err := checkOutputFormat(); err != nil {
 			return err
 		}
@@ -180,16 +184,16 @@ func download(bvid string) error {
 				return err
 			}
 		}
-		fmt.Println("Download video...")
+		logrus.Info("Download video...")
 		if err = downloadMedia(chooseMediaUrl(playUrlResp, selectedVideoQuality), videoTmp); err != nil {
 			return err
 		}
-		fmt.Println("Download video successfully!")
-		fmt.Println("Download audio...")
+		logrus.Info("Download video successfully!")
+		logrus.Info("Download audio...")
 		if err = downloadMedia(chooseMediaUrl(playUrlResp, selectedAudioQuality), audioTmp); err != nil {
 			return err
 		}
-		fmt.Println("Download audio successfully!")
+		logrus.Info("Download audio successfully!")
 		return merge(videoTmp.Name(), audioTmp.Name())
 	}
 	return nil
@@ -229,9 +233,6 @@ func merge(video, audio string) error {
 }
 
 func getDownloadDestFile(dir, f string) (*os.File, error) {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return nil, err
-	}
 	filePath := path.Join(dir, f)
 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
@@ -276,9 +277,15 @@ func downloadMedia(url string, writer io.Writer) error {
 }
 
 func checkFFmpeg() error {
-	fmt.Println("check ffmpeg is installed....")
+	logrus.Info("Check ffmpeg is installed....")
 	if err := exec.Command("ffmpeg", "-version").Run(); err != nil {
 		return fmt.Errorf("please check ffmpegCheck is installed correctly")
 	}
+	logrus.Info("FFmpeg is installed successfully!")
 	return nil
+}
+
+func checkDir() error {
+	_, err := os.Stat(outputDir)
+	return err
 }
