@@ -48,6 +48,9 @@ bgm:
 +-----------------------+------+-----------+----------+-----------+
 ```
 ### 下载视频
+- [x] 下载用户上传视频（通过输入BV号或者网址）
+- [x] 下载剧集（通过输入剧集网址）
+
 ![](images/example_download.gif)
 ## Inspired
 - [https://github.com/SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
