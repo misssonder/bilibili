@@ -52,7 +52,7 @@ func init() {
 	downloadCmd.Flags().StringVarP(&outputDir, "directory", "d", ".", "The output directory.")
 }
 
-func selectPagesCid(info *VideoInfo) (int64, error) {
+func selectVideoInfo(info *VideoInfo) (Page, error) {
 	pages := info.Pages
 	rows := make([]string, 0, len(pages))
 	for _, page := range pages {
@@ -60,9 +60,22 @@ func selectPagesCid(info *VideoInfo) (int64, error) {
 	}
 	selectedPage, err := selectList("Please select page", rows)
 	if err != nil {
-		return 0, err
+		return Page{}, err
 	}
-	return pages[selectedPage].CID, nil
+	return pages[selectedPage], nil
+}
+
+func selectSeasonInfo(info *SeasonInfo) (Episode, error) {
+	episodes := info.Episodes
+	rows := make([]string, 0, len(episodes))
+	for _, episode := range episodes {
+		rows = append(rows, episode.Title)
+	}
+	selectedPage, err := selectList("Please select episode", rows)
+	if err != nil {
+		return Episode{}, err
+	}
+	return episodes[selectedPage], nil
 }
 
 func selectFormat() (bilibili.Fnval, error) {
@@ -107,14 +120,35 @@ func selectMediaQuality(title string, qns []bilibili.Qn) (bilibili.Qn, error) {
 }
 
 func download(id string) error {
-	info, err := getVideoInfo(id)
-	if err != nil {
-		return err
-	}
-
-	cid, err := selectPagesCid(info)
-	if err != nil {
-		return err
+	var (
+		bvID  string
+		cid   int64
+		title string
+	)
+	if video.IsSSID(id) || video.IsEpID(id) {
+		info, err := getSeasonInfo(id)
+		if err != nil {
+			return err
+		}
+		episode, err := selectSeasonInfo(info)
+		if err != nil {
+			return err
+		}
+		cid = episode.CID
+		bvID = episode.BvID
+		title = info.Title
+	} else {
+		info, err := getVideoInfo(id)
+		if err != nil {
+			return err
+		}
+		page, err := selectVideoInfo(info)
+		if err != nil {
+			return err
+		}
+		cid = page.CID
+		bvID = id
+		title = info.Title
 	}
 
 	format, err := selectFormat()
@@ -123,12 +157,12 @@ func download(id string) error {
 	}
 
 	if len(outputFile) == 0 {
-		outputFile = fmt.Sprintf("%s.mp4", info.Title)
+		outputFile = fmt.Sprintf("%s.mp4", title)
 	}
 
 	switch format {
 	case bilibili.FnvalMP4:
-		playUrlResp, err := client.PlayUrl(id, cid, bilibili.Qn1080P, format)
+		playUrlResp, err := client.PlayUrl(bvID, cid, bilibili.Qn1080P, format)
 		if err != nil {
 			return err
 		}
@@ -144,7 +178,7 @@ func download(id string) error {
 		if err = checkFFmpeg(); err != nil {
 			return err
 		}
-		playUrlResp, err := client.PlayUrl(id, cid, 0, format)
+		playUrlResp, err := client.PlayUrl(bvID, cid, 0, format)
 		if err != nil {
 			return err
 		}
