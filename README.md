@@ -52,6 +52,7 @@ bgm:
 - [x] 下载剧集（通过输入剧集网址）
 
 ![](images/example_download.gif)
+![](images/example_download_season.gif)
 ## Inspired
 - [https://github.com/SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
 - [https://github.com/kkdai/youtube](https://github.com/kkdai/youtube)
