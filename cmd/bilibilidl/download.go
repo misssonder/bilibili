@@ -136,7 +136,7 @@ func download(id string) error {
 		}
 		cid = episode.CID
 		bvID = episode.BvID
-		title = info.Title
+		title = episode.Title
 	} else {
 		info, err := getVideoInfo(id)
 		if err != nil {
