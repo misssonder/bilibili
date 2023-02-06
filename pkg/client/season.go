@@ -301,7 +301,6 @@ func (client *Client) SeasonSection(ssID string, epID string) (*SeasonSectionRes
 		values.Set("ep_id", epID)
 	}
 	u.RawQuery = values.Encode()
-	println(u.String())
 	client.HttpClient = &http.Client{}
 	request, err := client.newCookieRequest(http.MethodGet, u.String(), nil)
 	if err != nil {

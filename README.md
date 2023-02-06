@@ -49,7 +49,6 @@ bgm:
 ```
 ```shell
 $  bilibilidl info 'https://www.bilibili.com/bangumi/play/ss33622?from_spmid=666.24.0.0'                                                                            (base) 
-https://api.bilibili.com/pgc/view/web/season?season_id=33622
 
 Title:       西游记(已观看1.4亿次)
 Duration:    84982000
