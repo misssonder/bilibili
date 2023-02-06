@@ -31,3 +31,23 @@ func TestExtractBvID(t *testing.T) {
 	}
 	t.Log(bvID)
 }
+
+func TestExtractSsID(t *testing.T) {
+	t.Log(IsSSID("https://www.bilibili.com/bangumi/play/ss33622?from_spmid=666.24.0.0"))
+	bvID, err := ExtractSSID("https://www.bilibili.com/bangumi/play/ss33622?from_spmid=666.24.0.0")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(bvID)
+}
+
+func TestExtractSSID(t *testing.T) {
+	t.Log(IsSSID("https://www.bilibili.com/bangumi/play/ep729217?from_spmid=666.4.banner.1"))
+	id, err := ExtractEpID("https://www.bilibili.com/bangumi/play/ep729217?from_spmid=666.4.banner.1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(id)
+}

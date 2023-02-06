@@ -43,17 +43,29 @@ func AIDtoBvID(av int) string {
 	return result
 }
 
-var videoRegexpList = []*regexp.Regexp{
+var bvIDRegexpList = []*regexp.Regexp{
 	regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`),
 	regexp.MustCompile(`(video\/BV([a-z]|[0-9]|[A-Z])+\/)`),
 	regexp.MustCompile(`BV([a-z]|[0-9]|[A-Z])+`),
+}
+
+var ssIDRegexpList = []*regexp.Regexp{
+	regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`),
+	regexp.MustCompile(`(play\/ss([0-9])+)`),
+	regexp.MustCompile(`([0-9])+`),
+}
+
+var epIDRegexpList = []*regexp.Regexp{
+	regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`),
+	regexp.MustCompile(`(play\/ep([0-9])+)`),
+	regexp.MustCompile(`([0-9])+`),
 }
 
 func ExtractBvID(id string) (string, error) {
 	if aid, err := strconv.Atoi(id); err == nil {
 		return AIDtoBvID(aid), nil
 	}
-	for _, re := range videoRegexpList {
+	for _, re := range bvIDRegexpList {
 		if isMatch := re.MatchString(id); isMatch {
 			subs := re.FindStringSubmatch(id)
 			id = subs[0]
@@ -63,4 +75,37 @@ func ExtractBvID(id string) (string, error) {
 		return "", fmt.Errorf("invalid characters in id")
 	}
 	return id, nil
+}
+
+func ExtractSSID(id string) (string, error) {
+	for _, re := range ssIDRegexpList {
+		if isMatch := re.MatchString(id); isMatch {
+			subs := re.FindStringSubmatch(id)
+			id = subs[0]
+		}
+	}
+	if len(id) < 5 {
+		return "", fmt.Errorf("invalid characters in id")
+	}
+	return id, nil
+}
+func ExtractEpID(id string) (string, error) {
+	for _, re := range epIDRegexpList {
+		if isMatch := re.MatchString(id); isMatch {
+			subs := re.FindStringSubmatch(id)
+			id = subs[0]
+		}
+	}
+	if len(id) < 6 {
+		return "", fmt.Errorf("invalid characters in id")
+	}
+	return id, nil
+}
+
+func IsSSID(id string) bool {
+	return regexp.MustCompile(`(play\/ss([0-9])+)`).MatchString(id)
+}
+
+func IsEpID(id string) bool {
+	return regexp.MustCompile(`(play\/ep([0-9])+)`).MatchString(id)
 }
