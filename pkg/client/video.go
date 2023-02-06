@@ -252,10 +252,6 @@ type PlayUrlResp struct {
 }
 
 func (client *Client) GetVideoInfo(id string) (*VideoInfoResp, error) {
-	id, err := video.ExtractBvID(id)
-	if err != nil {
-		return nil, err
-	}
 	url := fmt.Sprintf("%s?bvid=%s", videoInfoUrl, id)
 	client.HttpClient = &http.Client{}
 	request, err := client.newCookieRequest(http.MethodGet, url, nil)

@@ -52,8 +52,8 @@ func init() {
 	downloadCmd.Flags().StringVarP(&outputDir, "directory", "d", ".", "The output directory.")
 }
 
-func selectPagesCid(info *bilibili.VideoInfoResp) (int64, error) {
-	pages := info.Data.Pages
+func selectPagesCid(info *VideoInfo) (int64, error) {
+	pages := info.Pages
 	rows := make([]string, 0, len(pages))
 	for _, page := range pages {
 		rows = append(rows, page.Part)
@@ -62,7 +62,7 @@ func selectPagesCid(info *bilibili.VideoInfoResp) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return int64(pages[selectedPage].Cid), nil
+	return pages[selectedPage].CID, nil
 }
 
 func selectFormat() (bilibili.Fnval, error) {
@@ -106,8 +106,8 @@ func selectMediaQuality(title string, qns []bilibili.Qn) (bilibili.Qn, error) {
 	return qns[selected], nil
 }
 
-func download(bvid string) error {
-	info, err := client.GetVideoInfo(bvid)
+func download(id string) error {
+	info, err := getVideoInfo(id)
 	if err != nil {
 		return err
 	}
@@ -123,12 +123,12 @@ func download(bvid string) error {
 	}
 
 	if len(outputFile) == 0 {
-		outputFile = fmt.Sprintf("%s.mp4", info.Data.Title)
+		outputFile = fmt.Sprintf("%s.mp4", info.Title)
 	}
 
 	switch format {
 	case bilibili.FnvalMP4:
-		playUrlResp, err := client.PlayUrl(bvid, cid, bilibili.Qn1080P, format)
+		playUrlResp, err := client.PlayUrl(id, cid, bilibili.Qn1080P, format)
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ func download(bvid string) error {
 		if err = checkFFmpeg(); err != nil {
 			return err
 		}
-		playUrlResp, err := client.PlayUrl(bvid, cid, 0, format)
+		playUrlResp, err := client.PlayUrl(id, cid, 0, format)
 		if err != nil {
 			return err
 		}
