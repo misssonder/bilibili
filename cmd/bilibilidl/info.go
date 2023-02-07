@@ -174,9 +174,11 @@ func writeVideoInfoOutput(w io.Writer, info *VideoInfo) {
 	fmt.Println("AID:        ", info.AID)
 	fmt.Println("Description:", info.Description)
 	fmt.Println()
+	var index int
 	table := tablewriter.NewWriter(w)
 	table.SetAutoWrapText(false)
 	table.SetHeader([]string{
+		"index",
 		"part",
 		"page",
 		"cid",
@@ -184,7 +186,9 @@ func writeVideoInfoOutput(w io.Writer, info *VideoInfo) {
 		"dimension",
 	})
 	for _, page := range info.Pages {
+		index++
 		table.Append([]string{
+			strconv.Itoa(index),
 			page.Part,
 			strconv.Itoa(page.Page),
 			strconv.Itoa(int(page.CID)),
@@ -201,9 +205,11 @@ func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 	fmt.Println("SeasonID:   ", info.SeasonID)
 	fmt.Println("Description:", info.Description)
 	fmt.Println()
+	var index int
 	table := tablewriter.NewWriter(w)
 	table.SetAutoWrapText(false)
 	table.SetHeader([]string{
+		"index",
 		"title",
 		"bvid",
 		"cid",
@@ -212,7 +218,9 @@ func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 		"dimension",
 	})
 	for _, episode := range info.Episodes {
+		index++
 		table.Append([]string{
+			strconv.Itoa(index),
 			episode.Title,
 			episode.BvID,
 			strconv.Itoa(int(episode.CID)),
