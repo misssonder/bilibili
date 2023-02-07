@@ -55,8 +55,8 @@ func init() {
 func selectVideoInfo(info *VideoInfo) (Page, error) {
 	pages := info.Pages
 	rows := make([]string, 0, len(pages))
-	for _, page := range pages {
-		rows = append(rows, page.Part)
+	for i, page := range pages {
+		rows = append(rows, fmt.Sprintf("%d. %s", i+1, page.Part))
 	}
 	selectedPage, err := selectList("Please select page", rows)
 	if err != nil {
@@ -68,8 +68,8 @@ func selectVideoInfo(info *VideoInfo) (Page, error) {
 func selectSeasonInfo(info *SeasonInfo) (Episode, error) {
 	episodes := info.Episodes
 	rows := make([]string, 0, len(episodes))
-	for _, episode := range episodes {
-		rows = append(rows, episode.Title)
+	for i, episode := range episodes {
+		rows = append(rows, fmt.Sprintf("%d. %s", i+1, episode.Title))
 	}
 	selectedPage, err := selectList("Please select episode", rows)
 	if err != nil {
