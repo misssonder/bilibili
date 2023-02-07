@@ -17,7 +17,7 @@ type Page struct {
 	CID       int64
 	Page      int
 	Part      string
-	Duration  int64
+	Duration  time.Duration
 	Dimension Dimension
 }
 type Dimension struct {
@@ -30,7 +30,7 @@ type VideoInfo struct {
 	AID         int
 	Title       string
 	Author      string
-	Duration    int64
+	Duration    time.Duration
 	PublishTime string
 	CreateTime  string
 	Description string
@@ -40,7 +40,7 @@ type VideoInfo struct {
 type SeasonInfo struct {
 	SeasonID    int
 	Title       string
-	Duration    int64
+	Duration    time.Duration
 	Description string
 	Episodes    []Episode
 }
@@ -50,7 +50,7 @@ type Episode struct {
 	AID       int
 	CID       int64
 	Title     string
-	Duration  int
+	Duration  time.Duration
 	Dimension Dimension
 }
 
@@ -107,22 +107,22 @@ func getSeasonInfo(id string) (seasonInfo *SeasonInfo, err error) {
 		Episodes:    make([]Episode, 0),
 	}
 	for _, episode := range info.Result.Episodes {
-		page := Episode{
+		e := Episode{
 			BvID:     episode.Bvid,
 			CID:      int64(episode.Cid),
 			AID:      episode.Aid,
-			Duration: episode.Duration,
+			Duration: time.Duration(episode.Duration) * time.Millisecond,
 			Title:    episode.LongTitle,
 		}
 		if episode.Dimension.Rotate != 0 {
-			page.Dimension.Height = episode.Dimension.Width
-			page.Dimension.Width = episode.Dimension.Height
+			e.Dimension.Height = episode.Dimension.Width
+			e.Dimension.Width = episode.Dimension.Height
 		} else {
-			page.Dimension.Height = episode.Dimension.Height
-			page.Dimension.Width = episode.Dimension.Width
+			e.Dimension.Height = episode.Dimension.Height
+			e.Dimension.Width = episode.Dimension.Width
 		}
-		seasonInfo.Episodes = append(seasonInfo.Episodes, page)
-		seasonInfo.Duration += int64(episode.Duration)
+		seasonInfo.Episodes = append(seasonInfo.Episodes, e)
+		seasonInfo.Duration += e.Duration
 	}
 	return
 }
@@ -149,7 +149,7 @@ func getVideoInfo(id string) (videoInfo *VideoInfo, err error) {
 	for _, p := range info.Data.Pages {
 		page := Page{
 			CID:      int64(p.Cid),
-			Duration: int64(p.Duration),
+			Duration: time.Duration(p.Duration) * time.Second,
 			Part:     p.Part,
 			Page:     p.Page,
 		}
@@ -161,7 +161,7 @@ func getVideoInfo(id string) (videoInfo *VideoInfo, err error) {
 			page.Dimension.Width = p.Dimension.Width
 		}
 		videoInfo.Pages = append(videoInfo.Pages, page)
-		videoInfo.Duration += int64(p.Duration)
+		videoInfo.Duration += page.Duration
 	}
 	return
 }
@@ -169,7 +169,7 @@ func getVideoInfo(id string) (videoInfo *VideoInfo, err error) {
 func writeVideoInfoOutput(w io.Writer, info *VideoInfo) {
 	fmt.Println("Title:      ", info.Title)
 	fmt.Println("Author:     ", info.Author)
-	fmt.Println("Duration:   ", info.Duration)
+	fmt.Println("Duration:   ", timeString(info.Duration))
 	fmt.Println("BvID:       ", info.BvID)
 	fmt.Println("AID:        ", info.AID)
 	fmt.Println("Description:", info.Description)
@@ -192,7 +192,7 @@ func writeVideoInfoOutput(w io.Writer, info *VideoInfo) {
 			page.Part,
 			strconv.Itoa(page.Page),
 			strconv.Itoa(int(page.CID)),
-			strconv.Itoa(int(page.Duration)),
+			timeString(page.Duration),
 			fmt.Sprintf("%d*%d", page.Dimension.Height, page.Dimension.Width),
 		})
 	}
@@ -201,7 +201,7 @@ func writeVideoInfoOutput(w io.Writer, info *VideoInfo) {
 
 func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 	fmt.Println("Title:      ", info.Title)
-	fmt.Println("Duration:   ", info.Duration)
+	fmt.Println("Duration:   ", timeString(info.Duration))
 	fmt.Println("SeasonID:   ", info.SeasonID)
 	fmt.Println("Description:", info.Description)
 	fmt.Println()
@@ -224,8 +224,8 @@ func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 			episode.Title,
 			episode.BvID,
 			strconv.Itoa(int(episode.CID)),
-			strconv.Itoa(episode.Duration),
 			strconv.Itoa(episode.AID),
+			timeString(episode.Duration),
 			fmt.Sprintf("%d*%d", episode.Dimension.Height, episode.Dimension.Width),
 		})
 	}
@@ -235,4 +235,8 @@ func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 func init() {
 	rootCmd.AddCommand(infoCmd)
 	addFormatFlag(infoCmd.Flags())
+}
+
+func timeString(duration time.Duration) string {
+	return fmt.Sprintf("%+v", fmt.Sprintf("%+v", time.Duration(duration.Seconds())*(time.Second)))
 }
