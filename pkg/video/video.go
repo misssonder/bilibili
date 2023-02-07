@@ -84,9 +84,6 @@ func ExtractSSID(id string) (string, error) {
 			id = subs[0]
 		}
 	}
-	if len(id) < 5 {
-		return "", fmt.Errorf("invalid characters in id")
-	}
 	return id, nil
 }
 func ExtractEpID(id string) (string, error) {
@@ -95,9 +92,6 @@ func ExtractEpID(id string) (string, error) {
 			subs := re.FindStringSubmatch(id)
 			id = subs[0]
 		}
-	}
-	if len(id) < 6 {
-		return "", fmt.Errorf("invalid characters in id")
 	}
 	return id, nil
 }
