@@ -7,7 +7,7 @@ release:
   draft: true
   name_template: "{{.ProjectName}}-{{.Tag}}"
 builds:
-  - id: console
+  - id: bilibilidl
     main: ./cmd/bilibilidl
     env:
       - CGO_ENABLED=0
@@ -37,43 +37,17 @@ builds:
       - -trimpath
     ldflags:
       - -s -w -extldflags '-static'
-  #    hooks:
-  #      post:
-  #        - upx "{{ .Path }}"
-  - id: lorca
-    main: ./service/gmc_lorca
-    env:
-      - CGO_ENABLED=0
-      - GO111MODULE=on
-    goos:
-      - windows
-    goarch:
-      - 386
-      - amd64
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w -extldflags '-static' -H windowsgui
     hooks:
       post:
         - upx "{{ .Path }}"
-
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
 changelog:
   skip: true
 archives:
-  - id: lorca
+  - id: bilibilidl
     builds:
-      - lorca
-    name_template: "{{ .ProjectName }}_lorca_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    format_overrides:
-      - goos: windows
-        format: binary
-  - id: console
-    builds:
-      - console
+      - bilibilidl
     name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
