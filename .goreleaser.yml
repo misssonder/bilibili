@@ -8,7 +8,7 @@ release:
   name_template: "{{.ProjectName}}-{{.Tag}}"
 builds:
   - id: console
-    main: ./service/gmc
+    main: ./cmd/bilibilidl
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -89,4 +89,3 @@ nfpms:
     formats:
       - deb
       - rpm
-    maintainer: lz1998
