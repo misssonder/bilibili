@@ -8,33 +8,33 @@ import (
 )
 
 var table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
-var tr = map[string]int{}
-var s = []int{11, 10, 3, 8, 4, 6}
-var xor = 177451812
-var add = 8728348608
+var tr = map[string]int64{}
+var s = []int64{11, 10, 3, 8, 4, 6}
+var xor int64 = 177451812
+var add int64 = 8728348608
 
 func init() {
 	tableByte := []byte(table)
 	for i := 0; i < 58; i++ {
-		tr[string(tableByte[i])] = i
+		tr[string(tableByte[i])] = int64(i)
 	}
 }
 
-func BvIDToAID(bv string) int {
-	var r int
+func BvIDToAID(bv string) int64 {
+	var r int64
 	arr := []rune(bv)
 
 	for i := 0; i < 6; i++ {
-		r += tr[string(arr[s[i]])] * int(math.Pow(float64(58), float64(i)))
+		r += tr[string(arr[s[i]])] * int64(math.Pow(float64(58), float64(i)))
 	}
 	return (r - add) ^ xor
 }
 
-func AIDtoBvID(av int) string {
+func AIDtoBvID(av int64) string {
 	x := (av ^ xor) + add
 	r := []string{"B", "V", "1", " ", " ", "4", " ", "1", " ", "7", " ", " "}
 	for i := 0; i < 6; i++ {
-		r[s[i]] = string(table[int(math.Floor(float64(x/int(math.Pow(float64(58), float64(i))))))%58])
+		r[s[i]] = string(table[int(math.Floor(float64(x/int64(math.Pow(float64(58), float64(i))))))%58])
 	}
 	var result string
 	for i := 0; i < 12; i++ {
@@ -62,7 +62,7 @@ var epIDRegexpList = []*regexp.Regexp{
 }
 
 func ExtractBvID(id string) (string, error) {
-	if aid, err := strconv.Atoi(id); err == nil {
+	if aid, err := strconv.ParseInt(id, 10, 64); err == nil {
 		return AIDtoBvID(aid), nil
 	}
 	for _, re := range bvIDRegexpList {
