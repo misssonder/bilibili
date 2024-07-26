@@ -125,6 +125,7 @@ func download(id string) error {
 		cid   int64
 		title string
 	)
+	// epid ssid 需要调用v2接口
 	if video.IsSSID(id) || video.IsEpID(id) {
 		info, err := getSeasonInfo(id)
 		if err != nil {

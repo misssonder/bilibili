@@ -85,13 +85,15 @@ var infoCmd = &cobra.Command{
 func getSeasonInfo(id string) (seasonInfo *SeasonInfo, err error) {
 	var info *bilibili.SeasonSectionResp
 	if video.IsSSID(id) {
-		ssID, err := video.ExtractSSID(id)
+		var ssID string
+		ssID, err = video.ExtractSSID(id)
 		if err != nil {
 			return nil, err
 		}
 		info, err = client.SeasonSection(ssID, "")
 	} else {
-		epID, err := video.ExtractEpID(id)
+		var epID string
+		epID, err = video.ExtractEpID(id)
 		if err != nil {
 			return nil, err
 		}
