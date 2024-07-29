@@ -121,12 +121,14 @@ func selectMediaQuality(title string, qns []bilibili.Qn) (bilibili.Qn, error) {
 
 func download(id string) error {
 	var (
-		bvID  string
-		cid   int64
-		title string
+		bvID   string
+		cid    int64
+		title  string
+		epid   int64
+		season = video.IsSSID(id) || video.IsEpID(id)
 	)
 	// epid ssid 需要调用v2接口
-	if video.IsSSID(id) || video.IsEpID(id) {
+	if season {
 		info, err := getSeasonInfo(id)
 		if err != nil {
 			return err
@@ -137,6 +139,7 @@ func download(id string) error {
 		}
 		cid = episode.CID
 		bvID = episode.BvID
+		epid = episode.EpID
 		title = episode.Title
 	} else {
 		info, err := getVideoInfo(id)
@@ -163,90 +166,145 @@ func download(id string) error {
 
 	switch format {
 	case bilibili.FnvalMP4:
-		playUrlResp, err := client.PlayUrl(bvID, cid, bilibili.Qn1080P, format)
-		if err != nil {
-			return err
-		}
-
-		writer, err := getDownloadDestFile(outputDir, outputFile)
-		if err != nil {
-			return err
-		}
-		defer writer.Close()
-
-		return downloadMedia("Video", playUrlResp.Data.Durl[0].URL, writer)
+		return downloadMp4(season, bvID, cid, epid)
 	case bilibili.FnvalDash:
-		if err = checkFFmpeg(); err != nil {
-			return err
-		}
-		playUrlResp, err := client.PlayUrl(bvID, cid, 0, format)
-		if err != nil {
-			return err
-		}
-		var (
-			selectedVideoQuality bilibili.Qn
-			selectedAudioQuality bilibili.Qn
-			videoTmp             *os.File
-			audioTmp             *os.File
-		)
-		{
-			videoQualities := make([]bilibili.Qn, 0, len(playUrlResp.Data.Dash.Video))
-			videoTmp, err = os.CreateTemp(outputDir, "bilibili_video_*.m4s")
-			if err != nil {
-				return err
-			}
-			defer os.Remove(videoTmp.Name())
-			for _, video := range playUrlResp.Data.Dash.Video {
-				videoQualities = append(videoQualities, bilibili.Qn(video.ID))
-			}
-			selectedVideoQuality, err = selectMediaQuality("Please select video quality", videoQualities)
-			if err != nil {
-				return err
-			}
-		}
-		{
-			audioQualities := make([]bilibili.Qn, 0, len(playUrlResp.Data.Dash.Audio))
-			audioTmp, err = os.CreateTemp(outputDir, "bilibili_audio_*.m4s")
-			if err != nil {
-				return err
-			}
-			defer os.Remove(audioTmp.Name())
-			for _, audio := range playUrlResp.Data.Dash.Audio {
-				audioQualities = append(audioQualities, bilibili.Qn(audio.ID))
-			}
-			selectedAudioQuality, err = selectMediaQuality("Please select audio quality", audioQualities)
-			if err != nil {
-				return err
-			}
-		}
-		if err = downloadMedia("Video", chooseMediaUrl(playUrlResp, selectedVideoQuality), videoTmp); err != nil {
-			return err
-		}
-		if err = downloadMedia("Audio", chooseMediaUrl(playUrlResp, selectedAudioQuality), audioTmp); err != nil {
-			return err
-		}
-		ins.Start()
-		defer ins.Stop()
-		return merge(videoTmp.Name(), audioTmp.Name())
+		return downloadDash(season, bvID, cid, epid)
 	}
 	return nil
 }
 
-func chooseMediaUrl(playUrlResp *bilibili.PlayUrlResp, qn bilibili.Qn) string {
+func downloadMp4(season bool, bvID string, cid int64, epid int64) error {
+	var url string
+	if season {
+		playV2UrlResp, err := client.PlayUrlV2(epid, bilibili.Qn1080P, bilibili.FnvalMP4)
+		if err != nil {
+			return err
+		}
+		url = playV2UrlResp.Result.VideoInfo.Durl[0].URL
+	} else {
+		playUrlResp, err := client.PlayUrl(bvID, cid, bilibili.Qn1080P, bilibili.FnvalMP4)
+		if err != nil {
+			return err
+		}
+		url = playUrlResp.Data.Durl[0].URL
+	}
+	writer, err := getDownloadDestFile(outputDir, outputFile)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = writer.Close()
+	}()
+	return downloadMedia("Video", url, writer)
+}
+
+func downloadDash(season bool, bvID string, cid int64, epid int64) error {
+	if err := checkFFmpeg(); err != nil {
+		return err
+	}
+	var (
+		err  error
+		dash *bilibili.Dash
+	)
+	if season {
+		dash, err = getSeasonDash(epid)
+		if err != nil {
+			return err
+		}
+		return downloadFromDash(dash)
+	} else {
+		dash, err = getVideoDash(bvID, cid)
+		if err != nil {
+			return err
+		}
+		return downloadFromDash(dash)
+	}
+}
+
+func getSeasonDash(epid int64) (*bilibili.Dash, error) {
+	playUrlResp, err := client.PlayUrlV2(epid, 0, bilibili.FnvalDash)
+	if err != nil {
+		return nil, err
+	}
+	return &playUrlResp.Result.VideoInfo.Dash, nil
+}
+
+func getVideoDash(bvID string, cid int64) (*bilibili.Dash, error) {
+	playUrlResp, err := client.PlayUrl(bvID, cid, 0, bilibili.FnvalDash)
+	if err != nil {
+		return nil, err
+	}
+	return &playUrlResp.Data.Dash, nil
+}
+
+func downloadFromDash(dash *bilibili.Dash) error {
+	var (
+		selectedVideoQuality bilibili.Qn
+		selectedAudioQuality bilibili.Qn
+		videoTmp             *os.File
+		audioTmp             *os.File
+		err                  error
+	)
+	{
+		videoQualities := make([]bilibili.Qn, 0, len(dash.Video))
+		videoTmp, err = os.CreateTemp(outputDir, "bilibili_video_*.m4s")
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = os.Remove(videoTmp.Name())
+		}()
+		for _, v := range dash.Video {
+			videoQualities = append(videoQualities, bilibili.Qn(v.ID))
+		}
+		selectedVideoQuality, err = selectMediaQuality("Please select video quality", videoQualities)
+		if err != nil {
+			return err
+		}
+	}
+	{
+		audioQualities := make([]bilibili.Qn, 0, len(dash.Audio))
+		audioTmp, err = os.CreateTemp(outputDir, "bilibili_audio_*.m4s")
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = os.Remove(audioTmp.Name())
+		}()
+		for _, audio := range dash.Audio {
+			audioQualities = append(audioQualities, bilibili.Qn(audio.ID))
+		}
+		selectedAudioQuality, err = selectMediaQuality("Please select audio quality", audioQualities)
+		if err != nil {
+			return err
+		}
+	}
+	if err = downloadMedia("Video", chooseMediaUrl(dash, selectedVideoQuality), videoTmp); err != nil {
+		return err
+	}
+	if err = downloadMedia("Audio", chooseMediaUrl(dash, selectedAudioQuality), audioTmp); err != nil {
+		return err
+	}
+	ins.Start()
+	defer ins.Stop()
+	return merge(videoTmp.Name(), audioTmp.Name())
+}
+
+func chooseMediaUrl(dash *bilibili.Dash, qn bilibili.Qn) string {
 	if qn > 2048 {
-		for _, audio := range playUrlResp.Data.Dash.Audio {
+		for _, audio := range dash.Audio {
 			if audio.ID == int(qn) {
 				return audio.BaseURL
 			}
 		}
-		return playUrlResp.Data.Dash.Audio[0].BaseURL
+		return dash.Audio[0].BaseURL
 	} else {
-		for _, video := range playUrlResp.Data.Dash.Video {
-			if video.ID == int(qn) {
-				return video.BaseURL
+		for _, v := range dash.Video {
+			if v.ID == int(qn) {
+				return v.BaseURL
 			}
 		}
-		return playUrlResp.Data.Dash.Video[0].BaseURL
+		return dash.Video[0].BaseURL
 	}
 
 }

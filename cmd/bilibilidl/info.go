@@ -49,6 +49,7 @@ type Episode struct {
 	BvID      string
 	AID       int
 	CID       int64
+	EpID      int64
 	Title     string
 	Duration  time.Duration
 	Dimension Dimension
@@ -113,6 +114,7 @@ func getSeasonInfo(id string) (seasonInfo *SeasonInfo, err error) {
 			BvID:     episode.Bvid,
 			CID:      int64(episode.Cid),
 			AID:      episode.Aid,
+			EpID:     int64(episode.ID),
 			Duration: time.Duration(episode.Duration) * time.Millisecond,
 			Title:    episode.LongTitle,
 		}
@@ -215,6 +217,7 @@ func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 		"title",
 		"bvid",
 		"cid",
+		"epid",
 		"aid",
 		"duration",
 		"dimension",
@@ -226,6 +229,7 @@ func writeSeasonInfoOutput(w io.Writer, info *SeasonInfo) {
 			episode.Title,
 			episode.BvID,
 			strconv.Itoa(int(episode.CID)),
+			strconv.Itoa(int(episode.EpID)),
 			strconv.Itoa(episode.AID),
 			timeString(episode.Duration),
 			fmt.Sprintf("%d*%d", episode.Dimension.Height, episode.Dimension.Width),

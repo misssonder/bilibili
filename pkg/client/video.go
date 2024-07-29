@@ -185,61 +185,9 @@ type PlayUrlResp struct {
 		VideoCodecid      int      `json:"video_codecid"`
 		SeekParam         string   `json:"seek_param"`
 		SeekType          string   `json:"seek_type"`
-		Durl              []struct {
-			Order     int      `json:"order"`
-			Length    int      `json:"length"`
-			Size      int      `json:"size"`
-			Ahead     string   `json:"ahead"`
-			Vhead     string   `json:"vhead"`
-			URL       string   `json:"url"`
-			BackupURL []string `json:"backup_url"`
-		} `json:"durl"`
-		Dash struct {
-			Duration      int     `json:"duration"`
-			MinBufferTime float64 `json:"min_buffer_time"`
-			Video         []struct {
-				ID           int      `json:"id"`
-				BaseURL      string   `json:"base_url"`
-				BackupURL    []string `json:"backup_url"`
-				Bandwidth    int      `json:"bandwidth"`
-				MimeType     string   `json:"mime_type"`
-				Codecs       string   `json:"codecs"`
-				Width        int      `json:"width"`
-				Height       int      `json:"height"`
-				FrameRate    string   `json:"frame_rate"`
-				Sar          string   `json:"sar"`
-				StartWithSap int      `json:"start_with_sap"`
-				SegmentBase  struct {
-					Initialization string `json:"initialization"`
-					IndexRange     string `json:"index_range"`
-				} `json:"segment_base"`
-				Codecid int `json:"codecid"`
-			} `json:"video"`
-			Audio []struct {
-				ID           int      `json:"id"`
-				BaseURL      string   `json:"base_url"`
-				BackupURL    []string `json:"backup_url"`
-				Bandwidth    int      `json:"bandwidth"`
-				MimeType     string   `json:"mime_type"`
-				Codecs       string   `json:"codecs"`
-				Width        int      `json:"width"`
-				Height       int      `json:"height"`
-				FrameRate    string   `json:"frame_rate"`
-				Sar          string   `json:"sar"`
-				StartWithSap int      `json:"start_with_sap"`
-				SegmentBase  struct {
-					Initialization string `json:"initialization"`
-					IndexRange     string `json:"index_range"`
-				} `json:"segment_base"`
-				Codecid int `json:"codecid"`
-			} `json:"audio"`
-			Dolby struct {
-				Type  int         `json:"type"`
-				Audio interface{} `json:"audio"`
-			} `json:"dolby"`
-			Flac interface{} `json:"flac"`
-		} `json:"dash"`
-		SupportFormats []struct {
+		Durl              []Durl   `json:"durl"`
+		Dash              Dash     `json:"dash"`
+		SupportFormats    []struct {
 			Quality        int         `json:"quality"`
 			Format         string      `json:"format"`
 			NewDescription string      `json:"new_description"`
@@ -340,79 +288,14 @@ type PlayUrlV2Resp struct {
 				Quality        int      `json:"quality"`
 				NewDescription string   `json:"new_description"`
 			} `json:"support_formats"`
-			Message    string `json:"message"`
-			Quality    int    `json:"quality"`
-			Timelength int    `json:"timelength"`
-			HasPaid    bool   `json:"has_paid"`
-			DrmType    string `json:"drm_type"`
-			VipStatus  int    `json:"vip_status"`
-			Dash       struct {
-				Duration       int     `json:"duration"`
-				MinBufferTime  float64 `json:"minBufferTime"`
-				MinBufferTime0 float64 `json:"min_buffer_time"`
-				Video          []struct {
-					StartWithSap int      `json:"start_with_sap"`
-					BilidrmURI   string   `json:"bilidrm_uri"`
-					Bandwidth    int      `json:"bandwidth"`
-					Sar          string   `json:"sar"`
-					BackupURL    []string `json:"backupUrl"`
-					Codecs       string   `json:"codecs"`
-					BaseURL      string   `json:"base_url"`
-					BackupURL0   []string `json:"backup_url"`
-					SegmentBase  struct {
-						Initialization string `json:"initialization"`
-						IndexRange     string `json:"index_range"`
-					} `json:"segment_base"`
-					WidevinePssh string `json:"widevine_pssh"`
-					MimeType     string `json:"mimeType"`
-					FrameRate    string `json:"frame_rate"`
-					SegmentBase0 struct {
-						Initialization string `json:"Initialization"`
-						IndexRange     string `json:"indexRange"`
-					} `json:"SegmentBase"`
-					FrameRate0   string `json:"frameRate"`
-					Codecid      int    `json:"codecid"`
-					BaseURL0     string `json:"baseUrl"`
-					Size         int    `json:"size"`
-					MimeType0    string `json:"mime_type"`
-					Width        int    `json:"width"`
-					StartWithSAP int    `json:"startWithSAP"`
-					ID           int    `json:"id"`
-					Height       int    `json:"height"`
-					Md5          string `json:"md5"`
-				} `json:"video"`
-				Audio []struct {
-					StartWithSap int      `json:"start_with_sap"`
-					BilidrmURI   string   `json:"bilidrm_uri"`
-					Bandwidth    int      `json:"bandwidth"`
-					Sar          string   `json:"sar"`
-					BackupURL    []string `json:"backupUrl"`
-					Codecs       string   `json:"codecs"`
-					BaseURL      string   `json:"base_url"`
-					BackupURL0   []string `json:"backup_url"`
-					SegmentBase  struct {
-						Initialization string `json:"initialization"`
-						IndexRange     string `json:"index_range"`
-					} `json:"segment_base"`
-					WidevinePssh string `json:"widevine_pssh"`
-					MimeType     string `json:"mimeType"`
-					FrameRate    string `json:"frame_rate"`
-					SegmentBase0 struct {
-						Initialization string `json:"Initialization"`
-						IndexRange     string `json:"indexRange"`
-					} `json:"SegmentBase"`
-					FrameRate0   string `json:"frameRate"`
-					Codecid      int    `json:"codecid"`
-					BaseURL0     string `json:"baseUrl"`
-					Size         int    `json:"size"`
-					MimeType0    string `json:"mime_type"`
-					Width        int    `json:"width"`
-					StartWithSAP int    `json:"startWithSAP"`
-					ID           int    `json:"id"`
-					Height       int    `json:"height"`
-					Md5          string `json:"md5"`
-				} `json:"audio"`
-			} `json:"dash"`
+			Message      string `json:"message"`
+			Quality      int    `json:"quality"`
+			Timelength   int    `json:"timelength"`
+			HasPaid      bool   `json:"has_paid"`
+			DrmType      string `json:"drm_type"`
+			VipStatus    int    `json:"vip_status"`
+			Durl         []Durl `json:"durl"`
+			Dash         Dash   `json:"dash"`
 			ClipInfoList []struct {
 				MaterialNo int    `json:"materialNo"`
 				Start      int    `json:"start"`
@@ -505,6 +388,63 @@ type PlayUrlV2Resp struct {
 			} `json:"report"`
 		} `json:"view_info"`
 	} `json:"result"`
+}
+
+type Dash struct {
+	Duration      int     `json:"duration"`
+	MinBufferTime float64 `json:"min_buffer_time"`
+	Video         []struct {
+		ID           int      `json:"id"`
+		BaseURL      string   `json:"base_url"`
+		BackupURL    []string `json:"backup_url"`
+		Bandwidth    int      `json:"bandwidth"`
+		MimeType     string   `json:"mime_type"`
+		Codecs       string   `json:"codecs"`
+		Width        int      `json:"width"`
+		Height       int      `json:"height"`
+		FrameRate    string   `json:"frame_rate"`
+		Sar          string   `json:"sar"`
+		StartWithSap int      `json:"start_with_sap"`
+		SegmentBase  struct {
+			Initialization string `json:"initialization"`
+			IndexRange     string `json:"index_range"`
+		} `json:"segment_base"`
+		Codecid int `json:"codecid"`
+	} `json:"video"`
+	Audio []struct {
+		ID           int      `json:"id"`
+		BaseURL      string   `json:"base_url"`
+		BackupURL    []string `json:"backup_url"`
+		Bandwidth    int      `json:"bandwidth"`
+		MimeType     string   `json:"mime_type"`
+		Codecs       string   `json:"codecs"`
+		Width        int      `json:"width"`
+		Height       int      `json:"height"`
+		FrameRate    string   `json:"frame_rate"`
+		Sar          string   `json:"sar"`
+		StartWithSap int      `json:"start_with_sap"`
+		SegmentBase  struct {
+			Initialization string `json:"initialization"`
+			IndexRange     string `json:"index_range"`
+		} `json:"segment_base"`
+		Codecid int `json:"codecid"`
+	} `json:"audio"`
+	Dolby struct {
+		Type  int         `json:"type"`
+		Audio interface{} `json:"audio"`
+	} `json:"dolby"`
+	Flac interface{} `json:"flac"`
+}
+
+type Durl struct {
+	Size      int      `json:"size"`
+	Ahead     string   `json:"ahead"`
+	Length    int      `json:"length"`
+	Vhead     string   `json:"vhead"`
+	BackupURL []string `json:"backup_url"`
+	URL       string   `json:"url"`
+	Order     int      `json:"order"`
+	Md5       string   `json:"md5"`
 }
 
 func (client *Client) GetVideoInfo(id string) (*VideoInfoResp, error) {
@@ -644,8 +584,8 @@ func (client *Client) PlayUrl(bvid string, cid int64, qn Qn, fnval Fnval) (*Play
 	return playUrlResp, nil
 }
 
-func (client *Client) PlayUrlV2(epid string, qn Qn, fnval Fnval) (*PlayUrlV2Resp, error) {
-	url := fmt.Sprintf("%s?ep_id=%s&qn=%d&fnval=%d&fnver=0&fourk=1&support_multi_audio=true&gaia_source=&is_main_page=true&need_fragment=true&isGaiaAvoided=false&voice_balance=1&drm_tech_type=2", playUrlV2, epid, qn, fnval)
+func (client *Client) PlayUrlV2(epid int64, qn Qn, fnval Fnval) (*PlayUrlV2Resp, error) {
+	url := fmt.Sprintf("%s?ep_id=%d&qn=%d&fnval=%d&fnver=0&fourk=1&support_multi_audio=true&gaia_source=&is_main_page=true&need_fragment=true&isGaiaAvoided=false&voice_balance=1&drm_tech_type=2", playUrlV2, epid, qn, fnval)
 	client.HttpClient = &http.Client{}
 	request, err := client.newCookieRequest(http.MethodGet, url, nil)
 	if err != nil {
