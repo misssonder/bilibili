@@ -16,7 +16,7 @@ func TestLogin(t *testing.T) {
 	}
 	for resp := range resps {
 		if resp.LoginStatus == LoginSuccess {
-			println(util.MustMarshal(resp.Cookie))
+			t.Log(util.MustMarshal(resp.Cookie))
 		}
 	}
 

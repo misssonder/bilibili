@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/misssonder/bilibili/internal/util"
+	"github.com/misssonder/bilibili/pkg/video"
 )
 
 func TestClient_GetVideoInfo(t *testing.T) {
@@ -36,13 +37,46 @@ func TestClient_PlayUrl(t *testing.T) {
 			continue
 		}
 	}
-	id := "https://www.bilibili.com/video/BV1sy4y197KP/?spm_id_from=333.337.search-card.all.click&vd_source=76326787bdfce30577382b0e7e18f35c"
-	info, err := client.GetVideoInfo(id)
+	bvID := "BV117411r7R1"
+	info, err := client.GetVideoInfo(bvID)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	resp, err := client.PlayUrl(id, int64(info.Data.Pages[0].Cid), Qn4k, FnvalHDR|Fnval4K)
+	resp, err := client.PlayUrl(bvID, int64(info.Data.Pages[0].Cid), Qn4k, FnvalHDR|Fnval4K)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(util.MustMarshalIndent(resp))
+}
+
+func TestClient_PlayUrlV2(t *testing.T) {
+	client := &Client{}
+	responses, err := client.LoginWithQrCode(os.Stdout)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	for resp := range responses {
+		switch resp.LoginStatus {
+		case LoginSuccess:
+			client.SetCookie(resp.Cookie)
+			break
+		case LoginExpired:
+			t.Log(LoginExpired)
+			return
+		default:
+			continue
+		}
+	}
+	id := "https://www.bilibili.com/bangumi/play/ep759371"
+	epID, err := video.ExtractEpID(id)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	resp, err := client.PlayUrlV2(epID, Qn4k, FnvalHDR|Fnval4K)
 	if err != nil {
 		t.Error(err)
 		return
